@@ -4,6 +4,10 @@
 ![Django](https://img.shields.io/badge/django-4.2-green)
 ![Bootstrap](https://img.shields.io/badge/bootstrap-5.0-purple)
 
+
+![image](https://github.com/user-attachments/assets/b89f095d-9d26-4658-866f-3d11dbabef2b)
+
+
 Um simulador de apostas da Mega-Sena desenvolvido em Django que permite aos usuários simular apostas e analisar resultados históricos.
 
 ## 🎯 Funcionalidades
@@ -105,8 +109,8 @@ Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para ma
 
 ## 📞 Suporte
 
-Para suporte, envie um email para [seu-email@exemplo.com] ou abra uma issue no GitHub.
+Para suporte, envie um email para marcelo_hxt@hotmail.com ou abra uma issue no GitHub.
 
 ---
 
-Desenvolvido com ❤️ por [Seu Nome]
+Desenvolvido com ❤️ por Marcelo Henrique
