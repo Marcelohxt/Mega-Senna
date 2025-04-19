@@ -1,0 +1,61 @@
+{% extends 'predictor/base.html' %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Últimos Resultados</h5>
+            </div>
+            <div class="card-body">
+                {% for result in latest_results %}
+                <div class="mb-3">
+                    <h6>Concurso {{ result.draw_number }} - {{ result.draw_date|date:"d/m/Y" }}</h6>
+                    <div>
+                        {% for number in result.number_list %}
+                        <span class="number-ball">{{ number }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% empty %}
+                <p>Nenhum resultado disponível.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Últimas Previsões</h5>
+            </div>
+            <div class="card-body">
+                {% for prediction in latest_predictions %}
+                <div class="card prediction-card mb-3">
+                    <div class="card-body">
+                        <h6>{{ prediction.model_type|title }}</h6>
+                        <div>
+                            {% for number in prediction.number_list %}
+                            <span class="number-ball">{{ number }}</span>
+                            {% endfor %}
+                        </div>
+                        <small class="text-muted">{{ prediction.prediction_date|date:"d/m/Y H:i" }}</small>
+                    </div>
+                </div>
+                {% empty %}
+                <p>Nenhuma previsão disponível.</p>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h5>Gerar Nova Previsão</h5>
+            </div>
+            <div class="card-body">
+                <a href="{% url 'predictor:predictions' %}" class="btn btn-primary w-100">Gerar Previsão</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

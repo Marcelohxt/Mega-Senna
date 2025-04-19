@@ -1,0 +1,253 @@
+{% extends 'predictor/base.html' %}
+
+{% block content %}
+<div class="row">
+    <!-- Previsão Final -->
+    <div class="col-md-12 mb-4">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4>Previsão Final</h4>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-3">
+                    <h5>Números Previstos para o Próximo Sorteio</h5>
+                    <div class="d-flex justify-content-center flex-wrap">
+                        {% for number in predictions.final %}
+                        <span class="number-ball">{{ number }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="alert alert-info">
+                    <p>Esta previsão é uma combinação de diferentes métodos de análise, incluindo:</p>
+                    <ul>
+                        <li>Análise de Frequência (Peso: 3)</li>
+                        <li>Análise de Padrões (Peso: 2)</li>
+                        <li>Regressão Linear (Peso: 2)</li>
+                        <li>Random Forest (Peso: 3)</li>
+                        <li>Clustering (Peso: 1)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Análise de Frequência -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5>Análise de Frequência</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <h6>Números Mais Frequentes</h6>
+                    <div class="d-flex flex-wrap">
+                        {% for number in predictions.frequency %}
+                        <span class="number-ball">{{ number }}</span>
+                        {% endfor %}
+                    </div>
+                    <small class="text-muted">Score de Confiança: {{ confidence_scores.frequency|floatformat:2 }}</small>
+                </div>
+                <canvas id="frequencyChart" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Análise de Padrões -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5>Análise de Padrões</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <h6>Previsão Baseada em Padrões</h6>
+                    <div class="d-flex flex-wrap">
+                        {% for number in predictions.pattern %}
+                        <span class="number-ball">{{ number }}</span>
+                        {% endfor %}
+                    </div>
+                    <small class="text-muted">Score de Confiança: {{ confidence_scores.pattern|floatformat:2 }}</small>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Padrão</th>
+                                <th>Variação</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for pattern in patterns %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td>{{ pattern|join:", " }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modelos de Machine Learning -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5>Modelos de Machine Learning</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <h6>Regressão Linear</h6>
+                        <div class="d-flex flex-wrap">
+                            {% for number in predictions.linear %}
+                            <span class="number-ball">{{ number }}</span>
+                            {% endfor %}
+                        </div>
+                        <small class="text-muted">Score: {{ confidence_scores.linear|floatformat:2 }}</small>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <h6>Random Forest</h6>
+                        <div class="d-flex flex-wrap">
+                            {% for number in predictions.random_forest %}
+                            <span class="number-ball">{{ number }}</span>
+                            {% endfor %}
+                        </div>
+                        <small class="text-muted">Score: {{ confidence_scores.random_forest|floatformat:2 }}</small>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <h6>Clustering</h6>
+                        <div class="d-flex flex-wrap">
+                            {% for number in predictions.cluster %}
+                            <span class="number-ball">{{ number }}</span>
+                            {% endfor %}
+                        </div>
+                        <small class="text-muted">Score: {{ confidence_scores.cluster|floatformat:2 }}</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Análise de Sequências -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5>Análise de Sequências</h5>
+            </div>
+            <div class="card-body">
+                <h6>Pares de Números Mais Frequentes</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Números</th>
+                                <th>Frequência</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for pair, count in sequences.items %}
+                            <tr>
+                                <td>{{ pair.0 }}, {{ pair.1 }}</td>
+                                <td>{{ count }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Análise de Paridade e Faixas -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5>Análise de Paridade e Faixas</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Últimos Padrões de Paridade</h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Sorteio</th>
+                                        <th>Pares</th>
+                                        <th>Ímpares</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for even, odd in parity_stats %}
+                                    <tr>
+                                        <td>{{ forloop.counter }}</td>
+                                        <td>{{ even }}</td>
+                                        <td>{{ odd }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Últimos Padrões de Faixa</h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Sorteio</th>
+                                        <th>Baixos (1-30)</th>
+                                        <th>Altos (31-60)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for low, high in range_stats %}
+                                    <tr>
+                                        <td>{{ forloop.counter }}</td>
+                                        <td>{{ low }}</td>
+                                        <td>{{ high }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Gráfico de Frequência
+    const frequencyCtx = document.getElementById('frequencyChart').getContext('2d');
+    const frequencyData = {
+        labels: Object.keys({{ number_frequency|safe }}),
+        datasets: [{
+            label: 'Frequência de Números',
+            data: Object.values({{ number_frequency|safe }}),
+            backgroundColor: 'rgba(54, 162, 235, 0.5)',
+            borderColor: 'rgba(54, 162, 235, 1)',
+            borderWidth: 1
+        }]
+    };
+    new Chart(frequencyCtx, {
+        type: 'bar',
+        data: frequencyData,
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}
+{% endblock %} 
