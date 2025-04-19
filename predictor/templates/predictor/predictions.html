@@ -1,4 +1,5 @@
 {% extends 'predictor/base.html' %}
+{% load custom_filters %}
 
 {% block content %}
 <div class="row">
@@ -25,6 +26,12 @@
                         <li>Regressão Linear (Peso: 2)</li>
                         <li>Random Forest (Peso: 3)</li>
                         <li>Clustering (Peso: 1)</li>
+                        <li>Rede Neural (Peso: 2)</li>
+                        <li>SVM (Peso: 2)</li>
+                        <li>Análise de Componentes Principais (Peso: 1)</li>
+                        <li>Análise de Tendências (Peso: 2)</li>
+                        <li>Análise de Gaps (Peso: 2)</li>
+                        <li>Análise de Soma (Peso: 2)</li>
                     </ul>
                 </div>
             </div>
@@ -91,14 +98,14 @@
     </div>
 
     <!-- Modelos de Machine Learning -->
-    <div class="col-md-6 mb-4">
+    <div class="col-md-12 mb-4">
         <div class="card">
             <div class="card-header">
                 <h5>Modelos de Machine Learning</h5>
             </div>
             <div class="card-body">
                 <div class="row">
-                    <div class="col-md-6 mb-3">
+                    <div class="col-md-4 mb-3">
                         <h6>Regressão Linear</h6>
                         <div class="d-flex flex-wrap">
                             {% for number in predictions.linear %}
@@ -107,7 +114,7 @@
                         </div>
                         <small class="text-muted">Score: {{ confidence_scores.linear|floatformat:2 }}</small>
                     </div>
-                    <div class="col-md-6 mb-3">
+                    <div class="col-md-4 mb-3">
                         <h6>Random Forest</h6>
                         <div class="d-flex flex-wrap">
                             {% for number in predictions.random_forest %}
@@ -116,7 +123,7 @@
                         </div>
                         <small class="text-muted">Score: {{ confidence_scores.random_forest|floatformat:2 }}</small>
                     </div>
-                    <div class="col-md-6 mb-3">
+                    <div class="col-md-4 mb-3">
                         <h6>Clustering</h6>
                         <div class="d-flex flex-wrap">
                             {% for number in predictions.cluster %}
@@ -125,32 +132,126 @@
                         </div>
                         <small class="text-muted">Score: {{ confidence_scores.cluster|floatformat:2 }}</small>
                     </div>
+                    <div class="col-md-4 mb-3">
+                        <h6>Rede Neural</h6>
+                        <div class="d-flex flex-wrap">
+                            {% for number in predictions.neural_network %}
+                            <span class="number-ball">{{ number }}</span>
+                            {% endfor %}
+                        </div>
+                        <small class="text-muted">Score: {{ confidence_scores.neural_network|floatformat:2 }}</small>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <h6>SVM</h6>
+                        <div class="d-flex flex-wrap">
+                            {% for number in predictions.svm %}
+                            <span class="number-ball">{{ number }}</span>
+                            {% endfor %}
+                        </div>
+                        <small class="text-muted">Score: {{ confidence_scores.svm|floatformat:2 }}</small>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <h6>Análise de Componentes Principais</h6>
+                        <div class="d-flex flex-wrap">
+                            {% for number in predictions.pca %}
+                            <span class="number-ball">{{ number }}</span>
+                            {% endfor %}
+                        </div>
+                        <small class="text-muted">Score: {{ confidence_scores.pca|floatformat:2 }}</small>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Análise de Sequências -->
+    <!-- Novas Análises -->
+    <div class="col-md-12 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5>Análises Estatísticas Avançadas</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <!-- Análise de Tendências -->
+                    <div class="col-md-4 mb-3">
+                        <h6>Análise de Tendências</h6>
+                        <div class="d-flex flex-wrap">
+                            {% for number in predictions.trend %}
+                            <span class="number-ball">{{ number }}</span>
+                            {% endfor %}
+                        </div>
+                        <small class="text-muted">Score: {{ confidence_scores.trend|floatformat:2 }}</small>
+                        <div class="mt-2">
+                            <h6>Tendências Atuais</h6>
+                            <ul class="list-unstyled">
+                                {% for i, trend in trends.items %}
+                                <li>Número {{ i|add:1 }}: {{ trend|floatformat:2 }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Análise de Gaps -->
+                    <div class="col-md-4 mb-3">
+                        <h6>Análise de Gaps</h6>
+                        <div class="d-flex flex-wrap">
+                            {% for number in predictions.gap %}
+                            <span class="number-ball">{{ number }}</span>
+                            {% endfor %}
+                        </div>
+                        <small class="text-muted">Score: {{ confidence_scores.gap|floatformat:2 }}</small>
+                        <div class="mt-2">
+                            <h6>Média de Gaps</h6>
+                            <ul class="list-unstyled">
+                                {% for num, gap_list in gaps.items|slice:":5" %}
+                                <li>Número {{ num }}: {{ gap_list|mean|floatformat:1 }} sorteios</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Análise de Soma -->
+                    <div class="col-md-4 mb-3">
+                        <h6>Análise de Soma</h6>
+                        <div class="d-flex flex-wrap">
+                            {% for number in predictions.sum %}
+                            <span class="number-ball">{{ number }}</span>
+                            {% endfor %}
+                        </div>
+                        <small class="text-muted">Score: {{ confidence_scores.sum|floatformat:2 }}</small>
+                        <div class="mt-2">
+                            <h6>Estatísticas de Soma</h6>
+                            <ul class="list-unstyled">
+                                <li>Média: {{ mean_sum|floatformat:1 }}</li>
+                                <li>Desvio Padrão: {{ std_sum|floatformat:1 }}</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Análise de Diferenças -->
     <div class="col-md-6 mb-4">
         <div class="card">
             <div class="card-header">
-                <h5>Análise de Sequências</h5>
+                <h5>Análise de Diferenças</h5>
             </div>
             <div class="card-body">
-                <h6>Pares de Números Mais Frequentes</h6>
                 <div class="table-responsive">
                     <table class="table table-sm">
                         <thead>
                             <tr>
-                                <th>Números</th>
-                                <th>Frequência</th>
+                                <th>Sorteio</th>
+                                <th>Diferenças</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {% for pair, count in sequences.items %}
+                            {% for diff in differences %}
                             <tr>
-                                <td>{{ pair.0 }}, {{ pair.1 }}</td>
-                                <td>{{ count }}</td>
+                                <td>{{ forloop.counter }}</td>
+                                <td>{{ diff|join:", " }}</td>
                             </tr>
                             {% endfor %}
                         </tbody>

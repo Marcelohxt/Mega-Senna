@@ -1,0 +1,357 @@
+{% extends 'predictor/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4 text-white">Resultados da Mega Sena</h1>
+    
+    <!-- Filtros -->
+    <div class="card bg-dark mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label for="start_date" class="form-label">Data Inicial</label>
+                    <input type="date" class="form-control" id="start_date" name="start_date" value="{{ start_date }}">
+                </div>
+                <div class="col-md-3">
+                    <label for="end_date" class="form-label">Data Final</label>
+                    <input type="date" class="form-control" id="end_date" name="end_date" value="{{ end_date }}">
+                </div>
+                <div class="col-md-3">
+                    <label for="number" class="form-label">Número</label>
+                    <input type="number" class="form-control" id="number" name="number" min="1" max="60" value="{{ number }}">
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary me-2">Filtrar</button>
+                    <a href="{% url 'predictor:results' %}" class="btn btn-secondary">Limpar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Gráficos -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Frequência dos Números</h5>
+                    <canvas id="frequencyChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Distribuição Par/Ímpar</h5>
+                    <canvas id="parityChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Distribuição das Somas</h5>
+                    <canvas id="sumsChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Análises Estatísticas -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card bg-dark">
+                <div class="card-body">
+                    <h5 class="card-title text-white">Números Mais Frequentes</h5>
+                    <div class="d-flex flex-wrap">
+                        {% for number, count in most_common %}
+                        <div class="number-ball frequent me-2 mb-2">
+                            {{ number }}
+                            <small class="d-block text-center">{{ count }}</small>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card bg-dark">
+                <div class="card-body">
+                    <h5 class="card-title text-white">Números Menos Frequentes</h5>
+                    <div class="d-flex flex-wrap">
+                        {% for number, count in least_common %}
+                        <div class="number-ball less-frequent me-2 mb-2">
+                            {{ number }}
+                            <small class="d-block text-center">{{ count }}</small>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Números Atrasados -->
+    <div class="card bg-dark mb-4">
+        <div class="card-body">
+            <h5 class="card-title text-white">Números Atrasados</h5>
+            <div class="d-flex flex-wrap">
+                {% for number in delayed_numbers %}
+                <div class="number-ball delayed me-2 mb-2 {% if number.delay > 10 %}hot{% elif number.delay > 5 %}warm{% endif %}">
+                    {{ number.number }}
+                    <small class="d-block text-center">{{ number.delay }} sorteios</small>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabela de Resultados -->
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Concurso</th>
+                            <th>Data</th>
+                            <th>Números Sorteados</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for result in results %}
+                        <tr>
+                            <td>{{ result.draw_number }}</td>
+                            <td>{{ result.draw_date|date:"d/m/Y" }}</td>
+                            <td>
+                                {% for number in result.numbers.split %}
+                                <span class="number-ball">{{ number }}</span>
+                                {% endfor %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Paginação -->
+    {% if is_paginated %}
+    <nav aria-label="Page navigation" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page=1{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}{% if number %}&number={{ number }}{% endif %}">Primeira</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}{% if number %}&number={{ number }}{% endif %}">Anterior</a>
+            </li>
+            {% endif %}
+
+            <li class="page-item active">
+                <span class="page-link">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+            </li>
+
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}{% if number %}&number={{ number }}{% endif %}">Próxima</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}{% if number %}&number={{ number }}{% endif %}">Última</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+
+<style>
+.card {
+    background-color: #1a1a1a !important;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.number-ball {
+    display: inline-flex;
+    width: 55px;
+    height: 55px;
+    border-radius: 50%;
+    align-items: center;
+    justify-content: center;
+    margin: 8px;
+    font-weight: bold;
+    background-color: white;
+    color: #1a1a1a;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    flex-direction: column;
+    font-size: 1.2em;
+    padding: 5px;
+}
+
+.number-ball small {
+    font-size: 0.65em;
+    margin-top: -2px;
+    line-height: 1.2;
+    white-space: nowrap;
+}
+
+.number-ball.hot {
+    background-color: #dc3545;
+    color: white;
+}
+
+.number-ball.warm {
+    background-color: #ffc107;
+    color: #1a1a1a;
+}
+
+.number-ball.delayed {
+    width: 60px;
+    height: 60px;
+    font-size: 1.3em;
+}
+
+.number-ball.delayed small {
+    font-size: 0.6em;
+    margin-top: 0;
+}
+
+.table {
+    color: white;
+}
+
+.table th {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.pagination .page-link {
+    background-color: #1a1a1a;
+    border-color: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.pagination .page-item.active .page-link {
+    background-color: var(--bs-primary);
+    border-color: var(--bs-primary);
+}
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const chartData = {{ chart_data_json|safe }};
+    
+    // Configuração global para todos os gráficos
+    Chart.defaults.color = '#ffffff';
+    Chart.defaults.borderColor = 'rgba(255, 255, 255, 0.1)';
+    
+    // Gráfico de Frequência
+    new Chart(document.getElementById('frequencyChart'), {
+        type: 'bar',
+        data: {
+            labels: chartData.frequency.labels,
+            datasets: [{
+                label: 'Frequência',
+                data: chartData.frequency.data,
+                backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    }
+                },
+                x: {
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    labels: {
+                        color: '#ffffff'
+                    }
+                }
+            }
+        }
+    });
+
+    // Gráfico de Paridade
+    new Chart(document.getElementById('parityChart'), {
+        type: 'pie',
+        data: {
+            labels: chartData.parity.labels,
+            datasets: [{
+                data: chartData.parity.data,
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.7)',
+                    'rgba(54, 162, 235, 0.7)'
+                ],
+                borderColor: [
+                    'rgba(255, 99, 132, 1)',
+                    'rgba(54, 162, 235, 1)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    labels: {
+                        color: '#ffffff'
+                    }
+                }
+            }
+        }
+    });
+
+    // Gráfico de Somas
+    new Chart(document.getElementById('sumsChart'), {
+        type: 'line',
+        data: {
+            labels: chartData.sums.labels,
+            datasets: [{
+                label: 'Frequência',
+                data: chartData.sums.data,
+                backgroundColor: 'rgba(75, 192, 192, 0.3)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 2,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    }
+                },
+                x: {
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    labels: {
+                        color: '#ffffff'
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %} 

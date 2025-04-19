@@ -1,0 +1,372 @@
+{% extends 'predictor/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+    <h1 class="mb-4 text-white">Simulador de Apostas</h1>
+
+    <!-- Card de Seleção de Números -->
+    <div class="card bg-dark mb-4">
+        <div class="card-body">
+            <h5 class="card-title text-white mb-4">Selecione seus números</h5>
+            <div class="number-grid mb-4">
+                {% for number in ""|ljust:"60" %}
+                <button class="number-button" data-number="{{ forloop.counter }}">
+                    {{ forloop.counter }}
+                </button>
+                {% endfor %}
+            </div>
+            
+            <div class="row align-items-center">
+                <div class="col-md-4">
+                    <select class="form-select" id="betType">
+                        <option value="6">6 números - R$ 5,00</option>
+                        <option value="7">7 números - R$ 35,00</option>
+                        <option value="8">8 números - R$ 140,00</option>
+                        <option value="9">9 números - R$ 420,00</option>
+                        <option value="10">10 números - R$ 1.050,00</option>
+                        <option value="11">11 números - R$ 2.310,00</option>
+                        <option value="12">12 números - R$ 4.620,00</option>
+                        <option value="13">13 números - R$ 8.580,00</option>
+                        <option value="14">14 números - R$ 15.015,00</option>
+                        <option value="15">15 números - R$ 25.025,00</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <button class="btn btn-primary" id="randomNumbers">Números Aleatórios</button>
+                </div>
+                <div class="col-md-4">
+                    <button class="btn btn-danger" id="clearSelection">Limpar Seleção</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card de Números Selecionados -->
+    <div class="card bg-dark mb-4">
+        <div class="card-body">
+            <h5 class="card-title text-white">Sua Aposta</h5>
+            <div id="selectedNumbers" class="d-flex flex-wrap mb-3">
+                <!-- Números selecionados aparecerão aqui -->
+            </div>
+            <button class="btn btn-success" id="simulateButton">Simular Aposta</button>
+        </div>
+    </div>
+
+    <!-- Card de Resultados da Simulação -->
+    <div class="card bg-dark mb-4" id="simulationResults" style="display: none;">
+        <div class="card-body">
+            <h5 class="card-title text-white">Resultados da Simulação</h5>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="stats-card mb-3">
+                        <h6 class="text-white">Acertos nos Últimos Sorteios</h6>
+                        <div id="hitsHistory"></div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="stats-card">
+                        <h6 class="text-white">Estatísticas</h6>
+                        <ul class="list-unstyled text-white">
+                            <li>Média de Acertos: <span id="averageHits">-</span></li>
+                            <li>Maior Número de Acertos: <span id="maxHits">-</span></li>
+                            <li>Prêmios Conquistados: <span id="totalPrizes">-</span></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card de Histórico de Apostas -->
+    <div class="card bg-dark mb-4">
+        <div class="card-body">
+            <h5 class="card-title text-white">Histórico de Apostas</h5>
+            <div class="table-responsive">
+                <table class="table table-dark table-hover">
+                    <thead>
+                        <tr>
+                            <th>Data/Hora</th>
+                            <th>Números</th>
+                            <th>Tipo</th>
+                            <th>Média de Acertos</th>
+                            <th>Maior Acerto</th>
+                            <th>Prêmios</th>
+                        </tr>
+                    </thead>
+                    <tbody id="betHistory">
+                        <!-- O histórico será preenchido dinamicamente aqui -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.number-grid {
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    gap: 10px;
+}
+
+.number-button {
+    width: 100%;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    border: none;
+    background-color: white;
+    color: #1a1a1a;
+    font-weight: bold;
+    font-size: 1.1em;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.number-button:hover {
+    transform: scale(1.1);
+    background-color: #e9ecef;
+}
+
+.number-button.selected {
+    background-color: #0d6efd;
+    color: white;
+}
+
+.stats-card {
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    padding: 15px;
+}
+
+#selectedNumbers .number-ball {
+    margin: 5px;
+}
+
+.form-select {
+    background-color: #2a2a2a;
+    color: white;
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.form-select:focus {
+    background-color: #2a2a2a;
+    color: white;
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+.table {
+    color: white;
+}
+
+.table th {
+    border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.table td {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.history-number {
+    display: inline-block;
+    width: 25px;
+    height: 25px;
+    line-height: 25px;
+    text-align: center;
+    background-color: #0d6efd;
+    color: white;
+    border-radius: 50%;
+    margin: 2px;
+    font-size: 0.8em;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const maxNumbers = 15;
+    let selectedNumbers = new Set();
+    
+    // Elementos DOM
+    const numberButtons = document.querySelectorAll('.number-button');
+    const betTypeSelect = document.getElementById('betType');
+    const selectedNumbersDiv = document.getElementById('selectedNumbers');
+    const randomButton = document.getElementById('randomNumbers');
+    const clearButton = document.getElementById('clearSelection');
+    const simulateButton = document.getElementById('simulateButton');
+    const simulationResults = document.getElementById('simulationResults');
+
+    // Função para atualizar a exibição dos números selecionados
+    function updateSelectedNumbers() {
+        selectedNumbersDiv.innerHTML = '';
+        [...selectedNumbers].sort((a, b) => a - b).forEach(number => {
+            const ball = document.createElement('div');
+            ball.className = 'number-ball';
+            ball.textContent = number;
+            selectedNumbersDiv.appendChild(ball);
+        });
+    }
+
+    // Evento de clique nos números
+    numberButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const number = parseInt(button.dataset.number);
+            const maxAllowed = parseInt(betTypeSelect.value);
+
+            if (button.classList.contains('selected')) {
+                button.classList.remove('selected');
+                selectedNumbers.delete(number);
+            } else if (selectedNumbers.size < maxAllowed) {
+                button.classList.add('selected');
+                selectedNumbers.add(number);
+            }
+
+            updateSelectedNumbers();
+        });
+    });
+
+    // Evento de mudança no tipo de aposta
+    betTypeSelect.addEventListener('change', () => {
+        const maxAllowed = parseInt(betTypeSelect.value);
+        if (selectedNumbers.size > maxAllowed) {
+            // Remove números excedentes
+            const numbersArray = [...selectedNumbers];
+            selectedNumbers = new Set(numbersArray.slice(0, maxAllowed));
+            
+            // Atualiza os botões
+            numberButtons.forEach(button => {
+                const number = parseInt(button.dataset.number);
+                button.classList.toggle('selected', selectedNumbers.has(number));
+            });
+        }
+        updateSelectedNumbers();
+    });
+
+    // Botão de números aleatórios
+    randomButton.addEventListener('click', () => {
+        const maxAllowed = parseInt(betTypeSelect.value);
+        selectedNumbers.clear();
+        
+        // Remove seleção de todos os botões
+        numberButtons.forEach(button => button.classList.remove('selected'));
+        
+        // Seleciona números aleatórios
+        while(selectedNumbers.size < maxAllowed) {
+            const randomNumber = Math.floor(Math.random() * 60) + 1;
+            selectedNumbers.add(randomNumber);
+            numberButtons[randomNumber - 1].classList.add('selected');
+        }
+        
+        updateSelectedNumbers();
+    });
+
+    // Botão de limpar seleção
+    clearButton.addEventListener('click', () => {
+        selectedNumbers.clear();
+        numberButtons.forEach(button => button.classList.remove('selected'));
+        updateSelectedNumbers();
+    });
+
+    // Botão de simular
+    simulateButton.addEventListener('click', () => {
+        if (selectedNumbers.size < parseInt(betTypeSelect.value)) {
+            alert(`Selecione ${betTypeSelect.value} números para simular!`);
+            return;
+        }
+
+        console.log('Iniciando simulação...');
+        console.log('Números selecionados:', Array.from(selectedNumbers));
+        console.log('Tipo de aposta:', betTypeSelect.value);
+
+        // Prepara os dados para enviar
+        const betData = {
+            numbers: Array.from(selectedNumbers),
+            betType: parseInt(betTypeSelect.value)
+        };
+
+        // Obtém o token CSRF
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        console.log('CSRF Token:', csrfToken);
+
+        // Faz a chamada AJAX para o backend
+        fetch('{% url "predictor:simulate_bet" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify(betData)
+        })
+        .then(response => {
+            console.log('Status da resposta:', response.status);
+            console.log('Tipo da resposta:', response.type);
+            
+            if (!response.ok) {
+                return response.text().then(text => {
+                    console.error('Resposta de erro:', text);
+                    throw new Error(`Erro do servidor: ${response.status} - ${text}`);
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Dados recebidos:', data);
+            // Exibe os resultados
+            simulationResults.style.display = 'block';
+            
+            // Atualiza as estatísticas
+            document.getElementById('averageHits').textContent = data.average_hits.toFixed(2);
+            document.getElementById('maxHits').textContent = data.max_hits;
+            document.getElementById('totalPrizes').textContent = `R$ ${data.total_prizes.toFixed(2)}`;
+
+            // Atualiza o histórico de acertos
+            const hitsHistoryDiv = document.getElementById('hitsHistory');
+            hitsHistoryDiv.innerHTML = '';
+            data.hits_history.forEach(hit => {
+                const hitElement = document.createElement('div');
+                hitElement.className = 'hit-item mb-2';
+                hitElement.innerHTML = `
+                    <div class="d-flex justify-content-between">
+                        <span>Concurso ${hit.draw_number}:</span>
+                        <span>${hit.hits} acertos</span>
+                    </div>
+                `;
+                hitsHistoryDiv.appendChild(hitElement);
+            });
+
+            // Adiciona a aposta ao histórico
+            addToBetHistory(data);
+        })
+        .catch(error => {
+            console.error('Erro na simulação:', error);
+            alert('Ocorreu um erro durante a simulação: ' + error.message);
+        });
+    });
+
+    // Função para adicionar uma aposta ao histórico
+    function addToBetHistory(data) {
+        const betHistory = document.getElementById('betHistory');
+        const now = new Date();
+        const formattedDate = now.toLocaleString('pt-BR');
+        
+        const numbersHtml = Array.from(selectedNumbers)
+            .sort((a, b) => a - b)
+            .map(num => `<span class="history-number">${num}</span>`)
+            .join('');
+
+        const newRow = document.createElement('tr');
+        newRow.innerHTML = `
+            <td>${formattedDate}</td>
+            <td>${numbersHtml}</td>
+            <td>${betTypeSelect.value} números</td>
+            <td>${data.average_hits.toFixed(2)}</td>
+            <td>${data.max_hits}</td>
+            <td>R$ ${data.total_prizes.toFixed(2)}</td>
+        `;
+        
+        betHistory.insertBefore(newRow, betHistory.firstChild);
+    }
+});
+</script>
+{% endblock %} 
